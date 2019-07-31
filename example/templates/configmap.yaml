@@ -1,0 +1,10 @@
+{{- if .Values.configmap.enabled -}}
+{{- $fullName := include "app.fullname" . -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "app.fullname" . }}-configmap
+data:
+  properties: |-
+{{ .Values.configmap.data | indent 4 }}
+{{- end }}
