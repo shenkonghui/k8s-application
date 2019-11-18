@@ -1,0 +1,77 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  labels:
+{{ include "service.labels.standard" . | indent 4 }}
+  name: {{ .Chart.Name }}-job
+spec:
+  backoffLimit: 1
+  activeDeadlineSeconds: {{ .Values.job.activeDeadlineSeconds }}
+  template:
+    metadata:
+      name: {{ .Chart.Name }}
+      labels:
+{{ include "service.labels.standard" . | indent 8 }}
+    spec:
+      initContainers:
+      - name: mysqlcheck
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        env:
+        - name: MYSQL_HOST
+          value: mysql 
+        - name: MYSQL_DB
+          value: {{ .Values.env.MYSQL_DB }}
+        - name: MYSQL_PORT
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Chart.Name }}-secret
+              key: MYSQL_PORT
+        - name: MYSQL_USER
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Chart.Name }}-secret
+              key: MYSQL_USER
+        - name: MYSQL_PASS
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Chart.Name }}-secret
+              key: MYSQL_PASS
+        args:
+        - -c
+        - $(while ! mysqlcheck --host="${MYSQL_HOST}" --port="${MYSQL_PORT}" --user="${MYSQL_USER}" --password="${MYSQL_PASS}" --databases "${MYSQL_DB}" ; do sleep 1; done)
+        command:
+        - /bin/sh
+      containers:
+      - name: {{ .Chart.Name }}
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        env:
+        - name: MYSQL_HOST
+          value: mysql 
+        - name: MYSQL_DB
+          value: {{ .Values.env.MYSQL_DB }}
+        - name: MYSQL_PORT
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Chart.Name }}-secret
+              key: MYSQL_PORT
+        - name: MYSQL_USER
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Chart.Name }}-secret
+              key: MYSQL_USER
+        - name: MYSQL_PASS
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Chart.Name }}-secret
+              key: MYSQL_PASS
+        - name: SQL_SCRIPT
+          valueFrom:
+            configMapKeyRef:
+              name: {{ .Chart.Name }}-cm
+              key: SQL_SCRIPT
+        args:
+        - -c
+        - $(mysql -u"${MYSQL_USER}" -p"${MYSQL_PASS}" -h"${MYSQL_HOST}" -P"${MYSQL_PORT}" -D"${MYSQL_DB}" -e"${SQL_SCRIPT}")
+        command:
+        - /bin/sh
+      restartPolicy: Never

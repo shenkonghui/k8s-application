@@ -1,0 +1,29 @@
+# Default values for mysql-client.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+image:
+  repository: registry.cn-hangzhou.aliyuncs.com/choerodon-tools/mysql-client
+  tag: 10.2.15-r0
+  pullPolicy: IfNotPresent
+
+job:
+  activeDeadlineSeconds: 120
+
+
+env:
+  MYSQL_DB: test
+  # MYSQL_HOST: platform-mysql
+  MYSQL_PORT: 3306
+  MYSQL_USER: platform
+  MYSQL_PASS: "123456"
+  SQL_SCRIPT: |
+          create table oauth_access_token
+          (
+          create_time datetime default CURRENT_TIMESTAMP not null,
+          token_id varchar(255) null,
+          token_expired_seconds int default -1 null,
+          authentication_id varchar(255) null,
+          username varchar(255) null,
+          client_id varchar(255) null
+          )
