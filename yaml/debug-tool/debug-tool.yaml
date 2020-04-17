@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: debug-tool
+  labels:
+    app: debug-tool
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: debug-tool
+  template:
+    metadata:
+      labels:
+        app: debug-tool
+    spec:
+      containers:
+      - name: debug-tool
+        image: shenkonghui/network-tools
